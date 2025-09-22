@@ -4,14 +4,14 @@ A lightweight Home Assistant integration that reads event counts and last-start 
 Perfect for dashboards, automations.
 
 custom_components/zoneminder_db/
-├── __init__.py         # Integration setup & platform forwarding
-├── manifest.json       # Integration metadata & dependencies
-├── const.py            # Configuration keys & defaults
-├── config_flow.py      # UI-driven setup flow
-├── options_flow.py     # In-UI options (poll interval, lookback)
-├── coordinator.py      # DataUpdateCoordinator => DB polling
-├── sensor.py           # Event count & last-start timestamp sensors
-└── binary_sensor.py    # “Is active?” binary sensors
+    ── __init__.py         # Integration setup & platform forwarding
+    ── manifest.json       # Integration metadata & dependencies
+    ── const.py            # Configuration keys & defaults
+    ── config_flow.py      # UI-driven setup flow
+    ── options_flow.py     # In-UI options (poll interval, lookback)
+    ── coordinator.py      # DataUpdateCoordinator => DB polling
+    ── sensor.py           # Event count & last-start timestamp sensors
+    ── binary_sensor.py    # “Is active?” binary sensors
 
 1. First you have to setup DB to listen on all interfaces if not localhost. Mine is a separate server
     sudo nano /etc/mysql/mariadb.conf.d/50-server.cnf
