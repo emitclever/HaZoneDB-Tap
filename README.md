@@ -1,5 +1,5 @@
 # ZoneMinder DB Custom Integration for Home Assistant
-
+It is an atempt to play with custom_integration still in infancy ...
 <img width="1033" height="258" alt="image" src="https://github.com/user-attachments/assets/4456e3d0-6bd7-4f0b-a7b4-fd3ffe8b11df" />
 
 A lightweight Home Assistant integration that reads event counts and last-start datetimes straight from your ZoneMinder MariaDB. Perfect for dashboards and automations.
