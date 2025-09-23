@@ -113,11 +113,7 @@ def __init__(self, hass, config):
                 FROM Events
                 WHERE
                   StartDateTime <= NOW()
-                  AND (
-                    EndDateTime IS NULL
-                    OR EndDateTime = '0000-00-00 00:00:00'
-                    OR EndDateTime > NOW()
-                  )
+                  AND EndDateTime > NOW() - INTERVAL 5 SECOND
                 GROUP BY MonitorId;
             """)
             for row in cursor.fetchall():
