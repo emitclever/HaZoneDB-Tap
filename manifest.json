@@ -1,7 +1,7 @@
 {
   "domain": "zoneminder_db",
   "name": "ZoneMinder DB",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "requirements": ["mysql-connector-python"],
   "config_flow": true,
   "codeowners": ["@emitclever"]
