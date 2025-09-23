@@ -1,6 +1,11 @@
 # ZoneMinder DB Custom Integration for Home Assistant
 It is an atempt to play with custom_integration still in infancy ... there are maybe other solutions more advanced, I just wanted to pull out from zoneminder database for home assistant
-<img width="1033" height="258" alt="image" src="https://github.com/user-attachments/assets/4456e3d0-6bd7-4f0b-a7b4-fd3ffe8b11df" />
+A lightweight integration that pulls ZoneMinder event data from your MariaDB and exposes:
+
+    Rolling 10 min chunk counts over a configurable lookback window
+    Latest event start timestamps
+    Live in-progress recording detection
+    5 min-interval aggregated TotScore & AlarmFrames (optional)
 
 A lightweight Home Assistant integration that reads event counts and last-start datetimes straight from your ZoneMinder MariaDB. Perfect for dashboards and automations.
 
@@ -16,6 +21,11 @@ custom_components/zoneminder_db/
 ├── coordinator.py      # DataUpdateCoordinator => DB polling
 ├── sensor.py           # Event count & last-start timestamp sensors
 └── binary_sensor.py    # “Is active?” binary sensors
+
+Requirements
+    Home Assistant >= 0.XX
+    Python package: mysql-connector-python
+    A ZoneMinder MariaDB accessible from your HA host
 
 Setup Instructions
 Configure Your Database
@@ -75,14 +85,25 @@ zoneminder_db:
   database: zm
   username: zmuser
   password: secure_password
-  poll_interval: 60          # seconds
-  lookback_window: 10        # minutes
+  poll_interval: 60       # seconds
+  lookback_window: 60     # minutes
+  bin_interval: 5         # minutes for TotScore aggregation
 
 Restart Home Assistant.
 
 Add Integration via UI
 
 Go to: Settings → Devices & Services → Add Integration → ZoneMinder DB and fill in your DB details.Copy
+
+Exposed Entities
+
+    sensor.zoneminder_<id>_rolling_count Rolling count of chunks started in the lookback window
+    sensor.zoneminder_<id>_last_start ISO timestamp of the most recent chunk start
+    sensor.zoneminder_<id>_total_score Latest 5 min bucket’s TotScore (with bins attribute listing all intervals)
+    binary_sensor.zoneminder_<id>_active On while a recording chunk is in progress
+    binary_sensor.zoneminder_<id>_alarm On when the latest bucket’s TotScore > 0
+
+
 Contributing
 Fork the repo, create a feature branch, and submit pull requests.
 Please maintain PEP8 compliance and add tests for new features.
