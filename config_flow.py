@@ -46,6 +46,3 @@ class ZMConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return ZMOptionsFlowHandler(config_entry)
 
 
-
-
-
