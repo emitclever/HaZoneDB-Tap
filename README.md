@@ -1,4 +1,4 @@
-# ZoneMinder DB Custom Integration for Home Assistant
+# HaZoneDB-Tap Custom Integration for Home Assistant
 It is an atempt to play with custom_integration still in infancy ... there are maybe other solutions more advanced, I just wanted to pull out from zoneminder database for home assistant
 
 A lightweight Home Assistant integration that reads event counts and last-start datetimes straight from your ZoneMinder MariaDB. Perfect for dashboards and automations.
@@ -8,7 +8,7 @@ A lightweight Home Assistant integration that reads event counts and last-start 
 ## Integration Files
 
 ```plaintext
-custom_components/zoneminder_db/
+custom_components/HaZoneDB-Tap/
 ├── __init__.py         # Integration setup & platform forwarding
 ├── manifest.json       # Integration metadata & dependencies
 ├── const.py            # Configuration keys & defaults
@@ -71,11 +71,11 @@ FLUSH PRIVILEGES;
 
 Installation
 
-Create/Copy the zoneminder_db folder into your Home Assistant custom_components/ directory.CopyCopy
+Create/Copy the HaZoneDB-Tap folder into your Home Assistant custom_components/ directory.CopyCopy
 Configuration
 
 (Optional) Add the following to your configuration.yaml:
-zoneminder_db:
+HaZoneDB-Tap:
   host: 192.168.1.50
   port: 3306
   database: zm
@@ -89,7 +89,7 @@ Restart Home Assistant.
 
 Add Integration via UI
 
-Go to: Settings → Devices & Services → Add Integration → ZoneMinder DB and fill in your DB details.Copy
+Go to: Settings → Devices & Services → Add Integration → HaZoneDB-Tap and fill in your DB details.Copy
 
 This integration now creates for each ZoneMinder monitor:
 sensor.zoneminder_<monitor_id>_rolling_count
