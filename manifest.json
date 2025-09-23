@@ -1,8 +1,8 @@
 {
-  "domain": "zoneminder_db",
-  "name": "ZoneMinder DB",
+  "domain": "HaZoneDB-Tap",
+  "name": "HaZoneDB-Tap",
   "version": "0.0.1",
   "requirements": ["mysql-connector-python"],
   "config_flow": true,
-  "codeowners": ["@emitclever"]
+  "codeowners": []
 }
