@@ -1,10 +1,13 @@
-import mysql.connector
+# custom_components/zoneminder_db/coordinator.py
+
 import logging
 from datetime import timedelta
 
+import mysql.connector
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    DOMAIN,
     CONF_DB_HOST,
     CONF_DB_PORT,
     CONF_DB_NAME,
@@ -12,75 +15,96 @@ from .const import (
     CONF_DB_PASSWORD,
     CONF_POLL_INTERVAL,
     CONF_LOOKBACK_WINDOW,
+    CONF_BIN_INTERVAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
+
 class ZMCoordinator(DataUpdateCoordinator):
+    """Periodically polls ZoneMinder’s Events table, grouping into time bins."""
+
     def __init__(self, hass, config):
-        interval = config.get(CONF_POLL_INTERVAL)
+        interval = config[CONF_POLL_INTERVAL]
         super().__init__(
             hass,
             _LOGGER,
-            name="zoneminder_db",
+            name=DOMAIN,
             update_interval=timedelta(seconds=interval),
         )
         self.config = config
 
     async def _async_update_data(self):
-        lookback = self.config.get(CONF_LOOKBACK_WINDOW)
+        lookback = self.config[CONF_LOOKBACK_WINDOW]
+        bin_int  = self.config[CONF_BIN_INTERVAL]
 
         def fetch():
             conn = mysql.connector.connect(
                 host=self.config[CONF_DB_HOST],
                 port=self.config[CONF_DB_PORT],
-                database=self.config[CONF_DB_NAME],
                 user=self.config[CONF_DB_USER],
                 password=self.config[CONF_DB_PASSWORD],
+                database=self.config[CONF_DB_NAME],
             )
-            cursor = conn.cursor(dictionary=True)
+            try:
+                cursor = conn.cursor(dictionary=True)
 
-            cursor.execute("SELECT Id, Name FROM Monitors")
-            monitors = cursor.fetchall()
+                # 1) Fetch all monitors
+                cursor.execute("SELECT `Id`, `Name` FROM `Monitors`")
+                monitors = cursor.fetchall()
 
-            cursor.execute(f"""
-                SELECT
-                  MonitorId,
-                  COUNT(*)            AS count,
-                  MAX(StartDateTime)  AS last_start
-                FROM Events
-                WHERE StartDateTime > NOW() - INTERVAL {lookback} MINUTE
-                GROUP BY MonitorId
-            """)
-            # now each row has both count and last_start
-            rows = cursor.fetchall()
-            events = {
-                row["MonitorId"]: {
-                    "count": row["count"],
-                    "last_start": row["last_start"],
+                # 2) Query 5-minute bins for the lookback window
+                cursor.execute(f"""
+                    SELECT
+                      `MonitorId`,
+                      CONCAT(
+                        DATE_FORMAT(StartDateTime, '%Y-%m-%d %H:'),
+                        LPAD(FLOOR(MINUTE(StartDateTime)/{bin_int})*{bin_int}, 2, '0'),
+                        ':00'
+                      ) AS interval_start,
+                      SUM(`TotScore`)    AS total_score,
+                      SUM(`AlarmFrames`) AS alarm_frames
+                    FROM `Events`
+                    WHERE StartDateTime > NOW() - INTERVAL {lookback} MINUTE
+                    GROUP BY MonitorId, interval_start
+                    ORDER BY MonitorId, interval_start;
+                """)
+                rows = cursor.fetchall()
+
+                # 3) Organize data per monitor, casting Decimal → int
+                data = {
+                    m["Id"]: {"name": m["Name"], "bins": []}
+                    for m in monitors
                 }
-                for row in rows
-            }
 
+                for row in rows:
+                    mid = row["MonitorId"]
+                    data[mid]["bins"].append({
+                        "interval_start": row["interval_start"],
+                        "total_score":    int(row["total_score"]),
+                        "alarm_frames":   int(row["alarm_frames"]),
+                    })
 
-            cursor.close()
-            conn.close()
+                # 4) Derive latest bucket metrics
+                for mid, info in data.items():
+                    bins = info["bins"]
+                    if bins:
+                        last = bins[-1]
+                        info["latest_score"]    = last["total_score"]
+                        info["latest_interval"] = last["interval_start"]
+                    else:
+                        info["latest_score"]    = 0
+                        info["latest_interval"] = None
 
-            # ensure every monitor has a default structure
-            return {
-                m["Id"]: {
-                    "name": m["Name"],
-                    "count":      events.get(m["Id"], {}).get("count", 0),
-                    "last_start": events.get(m["Id"], {}).get("last_start"),
-                }
-                for m in monitors
-            }
+                return data
+
+            finally:
+                cursor.close()
+                conn.close()
 
         try:
             return await self.hass.async_add_executor_job(fetch)
         except Exception as err:
-            raise UpdateFailed(f"Database polling failed: {err}") from err
-
-
-
+            _LOGGER.error("Database polling failed: %s", err)
+            raise UpdateFailed(err)
 
