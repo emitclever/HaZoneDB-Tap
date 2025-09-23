@@ -1,14 +1,16 @@
+# custom_components/zoneminder_db/binary_sensor.py
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
+
 async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ):
+    """Set up ZoneMinder alarm binary sensor for each monitor."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     devices = []
 
@@ -17,8 +19,9 @@ async def async_setup_entry(
 
     async_add_entities(devices, update_before_add=True)
 
+
 class ZMAlarmBinarySensor(BinarySensorEntity):
-    """On when the latest 5-min bucket's total_score > 0."""
+    """Turns on when the latest TotScore > 0."""
 
     def __init__(self, coordinator, monitor_id):
         self.coordinator = coordinator
@@ -30,8 +33,8 @@ class ZMAlarmBinarySensor(BinarySensorEntity):
 
     @property
     def name(self):
-        nm = self.coordinator.data[self.monitor_id]["name"]
-        return f"ZoneMinder {nm} Alarm"
+        name = self.coordinator.data[self.monitor_id]["name"]
+        return f"ZoneMinder {name} Alarm"
 
     @property
     def is_on(self):
