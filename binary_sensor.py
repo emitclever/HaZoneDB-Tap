@@ -42,3 +42,5 @@ class ZMAlarmBinarySensor(BinarySensorEntity):
 
     async def async_update(self):
         await self.coordinator.async_request_refresh()
+
+
