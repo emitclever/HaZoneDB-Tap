@@ -116,15 +116,11 @@ class ZMCoordinator(DataUpdateCoordinator):
                         row["last_start"].isoformat() if row["last_start"] else None
                     )
 
-                # 4) Active count: any event updated in last 5 seconds
+                # 4) Active count: any event where score > 0 in this case
                 cursor.execute(f"""
-                    SELECT
-                      MonitorId,
-                      COUNT(*) AS active_count
+                    SELECT MonitorId, COUNT(CASE WHEN TotScore > 0 THEN 1 END) AS active_count
                     FROM Events
-                    WHERE
-                      StartDateTime <= NOW()
-                      AND EndDateTime > NOW() - INTERVAL 5 SECOND
+                    WHERE StartDateTime > NOW() - INTERVAL {lookback} MINUTE
                     GROUP BY MonitorId;
                 """)
                 for row in cursor.fetchall():
