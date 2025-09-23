@@ -95,13 +95,35 @@ Add Integration via UI
 
 Go to: Settings → Devices & Services → Add Integration → ZoneMinder DB and fill in your DB details.Copy
 
-Exposed Entities
+This integration now creates for each ZoneMinder monitor:
+sensor.zoneminder_<monitor_id>_rolling_count
+• Description – Rolling count of video‐chunk starts in your configured lookback window (default 60 min).
+• State – Integer number of 10-minute chunks that began in that window.
+• Attributes – last_event_start: ISO timestamp of the most recent chunk start.
+• Role – Gives you a quick metric of how often recordings have started recently.
 
-    sensor.zoneminder_<id>_rolling_count Rolling count of chunks started in the lookback window
-    sensor.zoneminder_<id>_last_start ISO timestamp of the most recent chunk start
-    sensor.zoneminder_<id>_total_score Latest 5 min bucket’s TotScore (with bins attribute listing all intervals)
-    binary_sensor.zoneminder_<id>_active On while a recording chunk is in progress
-    binary_sensor.zoneminder_<id>_alarm On when the latest bucket’s TotScore > 0
+sensor.zoneminder_<monitor_id>_last_start
+• Description – Exact timestamp of the most recent recording‐chunk StartDateTime.
+• State – ISO-formatted datetime string (device_class “timestamp”). • Role – Lets you know exactly when the last video chunk began.
+
+sensor.zoneminder_<monitor_id>_active_count
+• Description – Number of recording events currently in progress (EndDateTime still null or > now).
+• State – Integer, usually 0 or 1.
+• Role – Indicates live recording status for automations or dashboards.
+
+sensor.zoneminder_<monitor_id>_total_score
+• Description – Sum of motion‐analysis scores (TotScore) for the latest 5-min interval.
+• State – Integer total_score of the newest bin.
+• Attributes – bins: List of all 5-min buckets in your lookback window, each with
+• interval_start (string)
+• total_score (int)
+• alarm_frames (int) – latest_interval: ISO string of the current 5-min bucket.
+• Role – Provides a time-series view of activity intensity you can chart or inspect.
+
+binary_sensor.zoneminder_<monitor_id>_alarm
+• Description – Alarm flag toggled on whenever the latest 5-min bucket’s total_score > 0.
+• State – on/off.
+• Role – Simple motion-detected switch you can use directly in triggers or alerts.
 
 
 Contributing
